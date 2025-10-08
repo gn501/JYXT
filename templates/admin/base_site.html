@@ -1,0 +1,10 @@
+<!-- templates/admin/base_site.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | {{ DEFAULT_PAGE_TITLE }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">SaaS 系统管理</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

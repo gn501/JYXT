@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load static %}
+{% load app_tags %}
+
+{% block title %}{% page_title "部门管理" %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">部门管理</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item active">部门管理</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-sitemap"></i> 部门列表
+                </div>
+                <div class="card-tools">
+                    <div class="input-group input-group-sm">
+                        <a href="{% url 'enterprises:department_create' %}" class="btn btn-success btn-sm mr-2">
+                            <i class="fas fa-plus"></i> 新增部门
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>部门名称</th>
+                                <th>部门编码</th>
+                                <th>部门负责人</th>
+                                <th>所属企业</th>
+                                <th>用户数量</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if departments %}
+                                {% for department in departments %}
+                                <tr>
+                                    <td>
+                                        {% if department.level %}
+                                            {% for i in department.level|make_list %}
+                                                <span class="ml-3 d-inline-block"></span>
+                                            {% endfor %}
+                                            <i class="fas fa-angle-right"></i>
+                                        {% endif %}
+                                        {{ department.name }}
+                                    </td>
+                                    <td>{{ department.code|default:'-' }}</td>
+                                    <td>{{ department.manager.username|default:'-' }}</td>
+                                    <td>{{ department.enterprise.name }}</td>
+                                    <td>{{ department.get_department_users.count }}</td>
+                                    <td>
+                                        {% if department.is_active %}
+                                            <span class="badge bg-success">启用</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">禁用</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="project-actions">
+                                            <a href="{% url 'enterprises:department_detail' department.id %}" class="btn btn-info btn-sm" title="查看">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'enterprises:department_update' department.id %}" class="btn btn-primary btn-sm" title="编辑">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'enterprises:department_delete' department.id %}" class="btn btn-danger btn-sm" title="删除">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">暂无部门数据</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="float-left">
+                    共 {{ departments|length }} 个部门
+                </div>
+                <div class="float-right">
+                    <!-- 分页控件 -->
+                    {% if is_paginated %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">上一页</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">上一页</span>
+                                    </li>
+                                {% endif %}
+                                {% for i in paginator.page_range %}
+                                    {% if page_obj.number == i %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ i }}</span>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">下一页</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">下一页</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

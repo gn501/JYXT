@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+{% load app_tags %}
+
+{% with page_title_text=object|yesno:"编辑部门,添加部门" %}
+{% block title %}{% page_title page_title_text %}{% endblock %}
+{% endwith %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{% if object %}编辑部门{% else %}添加部门{% endif %}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'enterprises:department_list' %}">部门管理</a></li>
+                    <li class="breadcrumb-item active">{% if object %}编辑{% else %}添加{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- 基本信息部分 -->
+                    <div class="card card-warning">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-file-contract"></i> 基本信息</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_name">部门名称 <span class="text-danger">*</span></label>
+                                        <input type="text" name="name" class="form-control" id="id_name" 
+                                               value="{{ form.name.value|default:'' }}" required>
+                                        {% if form.name.errors %}
+                                            <div class="text-danger mt-1">{{ form.name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_code">部门编码</label>
+                                        <input type="text" name="code" class="form-control" 
+                                               id="id_code" value="{{ form.code.value|default:'' }}">
+                                        {% if form.code.errors %}
+                                            <div class="text-danger mt-1">{{ form.code.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_parent">上级部门</label>
+                                        <select name="parent" class="form-control" id="id_parent">
+                                            <option value="">请选择</option>
+                                            {% for choice in form.parent.field.queryset %}
+                                            <option value="{{ choice.id }}" {% if form.parent.value == choice.id|stringformat:'s' %}selected{% endif %}>{{ choice }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if form.parent.errors %}
+                                            <div class="text-danger mt-1">{{ form.parent.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_manager">部门负责人</label>
+                                        <select name="manager" class="form-control" id="id_manager">
+                                            <option value="">请选择</option>
+                                            {% for choice in form.manager.field.queryset %}
+                                            <option value="{{ choice.id }}" {% if form.manager.value == choice.id|stringformat:'s' %}selected{% endif %}>{{ choice.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if form.manager.errors %}
+                                            <div class="text-danger mt-1">{{ form.manager.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if object %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_is_active">是否启用</label>
+                                        <select name="is_active" class="form-control" id="id_is_active">
+                                            <option value="True" {% if form.is_active.value %}selected{% endif %}>是</option>
+                                            <option value="False" {% if not form.is_active.value %}selected{% endif %}>否</option>
+                                        </select>
+                                        {% if form.is_active.errors %}
+                                            <div class="text-danger mt-1">{{ form.is_active.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- 描述信息 -->
+                    <div class="card card-info mt-3">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-info-circle"></i> 描述信息</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="id_description">部门描述</label>
+                                <textarea name="description" class="form-control" rows="3" 
+                                          id="id_description">{{ form.description.value|default:'' }}</textarea>
+                                <small class="form-text text-muted">请输入部门的职责、权限等描述信息</small>
+                                {% if form.description.errors %}
+                                    <div class="text-danger mt-1">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 提交按钮 -->
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 保存
+                        </button>
+                        <a href="{% url 'enterprises:department_list' %}" class="btn btn-secondary ml-2">
+                            <i class="fas fa-times"></i> 取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

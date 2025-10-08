@@ -1,0 +1,153 @@
+<!-- staff/templates/staff/staff_form.html -->
+{% extends "base.html" %}
+{% load app_tags %}
+
+{% with page_title_text=object|yesno:"编辑员工,添加员工" %}
+{% block title %}{% page_title page_title_text %}{% endblock %}
+{% endwith %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{% if object %}编辑员工{% else %}添加员工{% endif %}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'staff:staff_list' %}">员工管理</a></li>
+                    <li class="breadcrumb-item active">{% if object %}编辑{% else %}添加{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_first_name">姓名 <span class="text-danger">*</span></label>
+                                <input type="text" name="first_name" class="form-control" id="id_first_name" 
+                                       value="{{ form.first_name.value|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_enterprise_phone">手机号 <span class="text-danger">*</span></label>
+                                <input type="text" name="enterprise_phone" class="form-control" id="id_enterprise_phone" 
+                                       value="{{ form.enterprise_phone.value|default:'' }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_work_phone">办公电话</label>
+                                <input type="text" name="work_phone" class="form-control" id="id_work_phone" 
+                                       value="{{ form.work_phone.value|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_enterprise_email">企业邮箱</label>
+                                <input type="email" name="enterprise_email" class="form-control" id="id_enterprise_email" 
+                                       value="{{ form.enterprise_email.value|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_department">部门</label>
+                                <select name="department" class="form-control" id="id_department">
+                                    <option value="">请选择部门</option>
+                                    {% for department in form.department.field.queryset %}
+                                    <option value="{{ department.id }}" {% if form.department.value == department.id %}selected{% endif %}>{{ department.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_position">职位</label>
+                                <input type="text" name="position" class="form-control" id="id_position" 
+                                       value="{{ form.position.value|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_avatar">头像</label>
+                                <div class="input-group">
+                                    <div class="custom-file">
+                                        <input type="file" name="avatar" class="custom-file-input" id="id_avatar" onchange="updateFileName(this)">
+                                        <label class="custom-file-label" for="id_avatar">选择文件</label>
+                                    </div>
+                                </div>
+                                {% if form.avatar.value %}
+                                <div class="mt-2">
+                                    当前头像: <img src="{{ form.avatar.value.url }}" alt="当前头像" style="max-height: 100px;">
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="d-block" for="id_is_active">
+                                    <input type="checkbox" name="is_active" id="id_is_active" 
+                                           {% if form.is_active.value %}checked{% endif %}>
+                                    激活用户
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_employment_status">就业状态</label>
+                                <select name="employment_status" class="form-control" id="id_employment_status">
+                                    {% for value, display in form.employment_status.field.choices %}
+                                    <option value="{{ value }}" {% if form.employment_status.value == value %}selected{% endif %}>{{ display }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        // 更新头像文件名显示
+                        function updateFileName(input) {
+                            const fileName = input.files[0] ? input.files[0].name : '选择文件';
+                            $(input).next('.custom-file-label').html(fileName);
+                        }
+                    </script>
+                    
+                    {% if not object %}
+                    <div class="alert alert-info">
+                        初始密码将设置为：<strong>手机号后六位</strong>，请提醒用户首次登录后修改密码。
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">保存</button>
+                        <a href="{% url 'staff:staff_list' %}" class="btn btn-default">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

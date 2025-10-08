@@ -1,0 +1,225 @@
+<!-- templates/enterprises/enterprise_form.html -->
+{% extends "base.html" %}
+{% load static %}
+{% load app_tags %}
+
+{% with page_title_text=object|yesno:"编辑企业,添加企业" %}
+{% block title %}{% page_title page_title_text %}{% endblock %}
+{% endwith %}
+
+{% block extra_js %}
+<script src="{% static 'js/enterprise_form.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">{% if object %}编辑企业{% else %}添加企业{% endif %}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'enterprises:enterprise_list' %}">企业管理</a></li>
+                    <li class="breadcrumb-item active">{% if object %}编辑{% else %}添加{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- 基本信息部分 -->
+                    <div class="card card-warning">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-file-contract"></i> 基本信息</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_name">企业名称 <span class="text-danger">*</span></label>
+                                        <input type="text" name="name" class="form-control" id="id_name" 
+                                               value="{{ form.name.value|default:'' }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_unified_social_credit_code">统一社会信用代码 <span class="text-danger">*</span></label>
+                                        <input type="text" name="unified_social_credit_code" class="form-control" 
+                                               id="id_unified_social_credit_code" value="{{ form.unified_social_credit_code.value|default:'' }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_enterprise_type">企业类型</label>
+                                        <select name="enterprise_type" class="form-control" id="id_enterprise_type">
+                                            <option value="">请选择</option>
+                                            {% for choice in form.enterprise_type.field.choices %}
+                                            <option value="{{ choice.0 }}" {% if form.enterprise_type.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_legal_representative">法定代表人</label>
+                                        <input type="text" name="legal_representative" class="form-control" 
+                                               id="id_legal_representative" value="{{ form.legal_representative.value|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_registered_capital">注册资本</label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.0001" name="registered_capital" class="form-control" 
+                                                   id="id_registered_capital" value="{{ form.registered_capital.value|default:'' }}">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">万元</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_establishment_date">成立日期</label>
+                                        <input type="date" name="establishment_date" class="form-control" 
+                                               id="id_establishment_date" value="{{ form.establishment_date.value|date:'Y-m-d'|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_business_term_start">营业期限开始</label>
+                                        <input type="date" name="business_term_start" class="form-control" 
+                                               id="id_business_term_start" value="{{ form.business_term_start.value|date:'Y-m-d'|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_business_term_end">营业期限结束</label>
+                                        <input type="date" name="business_term_end" class="form-control" 
+                                               id="id_business_term_end" value="{{ form.business_term_end.value|date:'Y-m-d'|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_registration_authority">登记机关</label>
+                                        <input type="text" name="registration_authority" class="form-control" 
+                                               id="id_registration_authority" value="{{ form.registration_authority.value|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_registered_address">注册地址</label>
+                                        <input type="text" name="registered_address" class="form-control" 
+                                               id="id_registered_address" value="{{ form.registered_address.value|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="id_business_scope">经营范围</label>
+                                        <textarea name="business_scope" class="form-control" id="id_business_scope" rows="4">{{ form.business_scope.value|default:'' }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 企业信息部分 -->
+                    <div class="card card-secondary">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-info-circle"></i> 企业信息</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_contact_address">联系地址</label>
+                                        <input type="text" name="contact_address" class="form-control" 
+                                               id="id_contact_address" value="{{ form.contact_address.value|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_contact_phone">联系电话</label>
+                                        <input type="text" name="contact_phone" class="form-control" id="id_contact_phone" 
+                                               value="{{ form.contact_phone.value|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_contact_email">联系邮箱</label>
+                                        <input type="email" name="contact_email" class="form-control" id="id_contact_email" 
+                                               value="{{ form.contact_email.value|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_website">企业网站</label>
+                                        <input type="url" name="website" class="form-control" id="id_website" 
+                                               value="{{ form.website.value|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_logo">企业LOGO</label>
+                                        <input type="file" name="logo" class="form-control-file" id="id_logo">
+                                        {% if form.logo.value %}
+                                        <div class="mt-2">
+                                            <img src="{{ form.logo.value.url }}" alt="企业LOGO" style="max-height: 100px;">
+                                            <p class="text-sm text-muted">当前LOGO: {{ form.logo.value }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_is_active">状态</label>
+                                        <select name="is_active" class="form-control" id="id_is_active">
+                                            <option value="true" {% if form.is_active.value %}selected{% endif %}>激活</option>
+                                            <option value="false" {% if not form.is_active.value %}selected{% endif %}>禁用</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">保存</button>
+                        <a href="{% url 'enterprises:enterprise_list' %}" class="btn btn-default">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

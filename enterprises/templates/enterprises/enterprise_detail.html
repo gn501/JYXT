@@ -1,0 +1,80 @@
+<!-- templates/enterprises/enterprise_detail.html -->
+{% extends "base.html" %}
+{% load app_tags %}
+
+{% block title %}{% with "企业详情 - "|add:enterprise.name as page_title_content %}{% page_title page_title_content %}{% endwith %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">企业详情</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'enterprises:enterprise_list' %}">企业管理</a></li>
+                    <li class="breadcrumb-item active">详情</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">基本信息</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 30%">企业名称</th>
+                                <td>{{ enterprise.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>统一社会信用代码</th>
+                                <td>{{ enterprise.unified_social_credit_code }}</td>
+                            </tr>
+                            <tr>
+                                <th>法定代表人</th>
+                                <td>{{ enterprise.legal_representative }}</td>
+                            </tr>
+                            <tr>
+                                <th>联系电话</th>
+                                <td>{{ enterprise.contact_phone }}</td>
+                            </tr>
+                            <tr>
+                                <th>联系邮箱</th>
+                                <td>{{ enterprise.contact_email }}</td>
+                            </tr>
+                            <tr>
+                                <th>状态</th>
+                                <td>
+                                    {% if enterprise.is_active %}
+                                    <span class="badge badge-success">激活</span>
+                                    {% else %}
+                                    <span class="badge badge-danger">禁用</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>创建时间</th>
+                                <td>{{ enterprise.created_at }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'enterprises:enterprise_update' enterprise.pk %}" class="btn btn-warning">编辑</a>
+                        <a href="{% url 'enterprises:enterprise_list' %}" class="btn btn-default">返回列表</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

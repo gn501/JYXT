@@ -1,0 +1,169 @@
+<!-- staff/templates/staff/staff_list.html -->
+{% extends "base.html" %}
+{% load app_tags %}
+{% load static %}
+
+{% block title %}{% page_title "员工管理" %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">员工管理</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item active">员工管理</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 class="card-title">员工列表</h3>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <a href="{% url 'staff:staff_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 添加员工
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 搜索框 -->
+                <div class="row mb-4">
+                    <div class="col-md-6 offset-md-3">
+                        <form method="get" action="">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="搜索：姓名/手机号/职位" 
+                                       value="{{ search_query }}">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- 员工表格 -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th>姓名</th>
+                                <th>手机号</th>
+                                <th>办公电话</th>
+                                <th>企业邮箱</th>
+                                <th>部门</th>
+                                <th>职位</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in staff_list %}
+                            <tr>
+                                <td>
+                                    {% if staff.user.avatar %}
+                                        <img src="{{ staff.user.avatar.url }}" class="img-circle" alt="用户头像" style="width: 30px; height: 30px; object-fit: cover;">
+                                    {% else %}
+                                        <img src="{% static 'img/default_avatar.png' %}" class="img-circle" alt="用户头像" style="width: 30px; height: 30px; object-fit: cover;">
+                                    {% endif %}
+                                </td>
+                                <td>{{ staff.user.first_name }}</td>
+                                <td>{{ staff.enterprise_phone }}</td>
+                                <td>{{ staff.work_phone|default:"-" }}</td>
+                                <td>{{ staff.enterprise_email|default:"-" }}</td>
+                                <td>{{ staff.department.name|default:"-" }}</td>
+                                <td>{{ staff.position|default:"-" }}</td>
+                                <td>
+                                    <span class="badge {% if staff.employment_status == 'employed' %}badge-success{% else %}badge-danger{% endif %}">
+                                        {{ staff.get_employment_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="project-actions">
+                                        <a href="{% url 'staff:staff_detail' staff.id %}" class="btn btn-info btn-sm" title="查看详情">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'staff:staff_update' staff.id %}" class="btn btn-primary btn-sm" title="编辑">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'staff:staff_delete' staff.id %}" class="btn btn-danger btn-sm" title="删除">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center">暂无员工数据</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="mt-4">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

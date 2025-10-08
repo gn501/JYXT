@@ -1,0 +1,136 @@
+<!-- staff/templates/staff/staff_profile.html -->
+{% extends "base.html" %}
+{% load app_tags %}
+
+{% block title %}{% page_title '个人资料' %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">个人资料</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item active">个人资料</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_first_name">姓名 <span class="text-danger">*</span></label>
+                                <input type="text" name="first_name" class="form-control" id="id_first_name" 
+                                       value="{{ form.first_name.value|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_enterprise_phone">手机号 <span class="text-danger">*</span></label>
+                                <input type="text" name="enterprise_phone" class="form-control" id="id_enterprise_phone" 
+                                       value="{{ form.enterprise_phone.value|default:'' }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_work_phone">办公电话</label>
+                                <input type="text" name="work_phone" class="form-control" id="id_work_phone" 
+                                       value="{{ form.work_phone.value|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_email">个人邮箱</label>
+                                <input type="email" name="email" class="form-control" id="id_email" 
+                                       value="{{ form.email.value|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_enterprise_email">企业邮箱</label>
+                                <input type="email" name="enterprise_email" class="form-control" id="id_enterprise_email" 
+                                       value="{{ form.enterprise_email.value|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_position">职位</label>
+                                <input type="text" name="position" class="form-control" id="id_position" 
+                                       value="{{ form.position.value|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_avatar">头像</label>
+                                <div class="input-group">
+                                    <div class="custom-file">
+                                        <input type="file" name="avatar" class="custom-file-input" id="id_avatar" onchange="updateFileName(this)">
+                                        <label class="custom-file-label" for="id_avatar">选择文件</label>
+                                    </div>
+                                </div>
+                                {% if request.user.avatar %}
+                                <div class="mt-2">
+                                    当前头像: <img src="{{ request.user.avatar.url }}" alt="当前头像" style="max-height: 100px;">
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="id_bio">个人简介</label>
+                                <textarea name="bio" class="form-control" id="id_bio" rows="4">{{ form.bio.value|default:'' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if current_enterprise %}
+                    <div class="alert alert-info">
+                        当前所属企业: <strong>{{ current_enterprise.name }}</strong>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">保存修改</button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-default">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  // 更新文件输入框的文件名显示
+  function updateFileName(input) {
+    const fileName = input.files[0].name;
+    const label = input.nextElementSibling;
+    label.textContent = fileName;
+  }
+</script>
+{% endblock %}

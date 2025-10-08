@@ -1,0 +1,65 @@
+<!-- templates/skill_assessment/enterprise_profile_list.html -->
+{% extends "base.html" %}
+{% load app_tags %}
+
+{% block title %}{% page_title "职业技能认定企业档案" %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">职业技能认定企业档案</h1>
+            </div>
+            <div class="col-sm-6">
+                <a href="{% url 'skill_assessment:enterprise_profile_create' %}" class="btn btn-primary float-right">
+                    <i class="fas fa-plus"></i> 添加企业档案
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                {% if profiles %}
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>企业名称</th>
+                            <th>机构类型</th>
+                            <th>联系人</th>
+                            <th>联系电话</th>
+                            <th>资质编号</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for profile in profiles %}
+                        <tr>
+                            <td>{{ profile.enterprise.name }}</td>
+                            <td>{{ profile.get_org_type_display }}</td>
+                            <td>{{ profile.contact_person }}</td>
+                            <td>{{ profile.contact_phone }}</td>
+                            <td>{{ profile.qualification_number }}</td>
+                            <td>
+                                <a href="{% url 'skill_assessment:enterprise_profile_update' profile.pk %}" class="btn btn-warning btn-sm" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-info">
+                    暂无职业技能认定企业档案，<a href="{% url 'skill_assessment:enterprise_profile_create' %}">点击添加第一个档案</a>。
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

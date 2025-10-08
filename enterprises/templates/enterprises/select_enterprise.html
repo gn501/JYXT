@@ -1,0 +1,44 @@
+<!-- templates/enterprises/select_enterprise.html -->
+{% extends "base.html" %}
+
+{% block title %}选择企业 - SaaS 系统{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">选择企业</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                {% if enterprises %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="enterprise_id">选择要操作的企业：</label>
+                        <select name="enterprise_id" id="enterprise_id" class="form-control" required>
+                            <option value="">-- 请选择企业 --</option>
+                            {% for enterprise in enterprises %}
+                            <option value="{{ enterprise.id }}">{{ enterprise.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">确认选择</button>
+                </form>
+                {% else %}
+                <div class="alert alert-warning">
+                    暂无可用企业。请联系系统管理员。
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

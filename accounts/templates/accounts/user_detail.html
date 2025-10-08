@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load app_tags %}
+
+{% with page_title_text=user.username|add:" - 用户详情" %}
+{% block title %}{% page_title page_title_text %}{% endblock %}
+{% endwith %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">用户详情</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'accounts:user_list' %}">用户管理</a></li>
+                    <li class="breadcrumb-item active">{{ user.username }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ user.username }} - {{ user.first_name }}{{ user.last_name }}</h3>
+                <div class="card-tools">
+                    <a href="{% url 'accounts:user_update' user.pk %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-edit"></i> 编辑
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <p class="form-control-plaintext">{{ user.username }}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>姓名</label>
+                            <p class="form-control-plaintext">{{ user.first_name }}{{ user.last_name }}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>邮箱</label>
+                            <p class="form-control-plaintext">{{ user.email }}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <p class="form-control-plaintext">{{ user.phone|default:"-" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>用户类型</label>
+                            <p class="form-control-plaintext">{{ user.get_user_type_display }}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>部门</label>
+                            <p class="form-control-plaintext">{{ user.department|default:"-" }}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>职位</label>
+                            <p class="form-control-plaintext">{{ user.position|default:"-" }}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>状态</label>
+                            <p class="form-control-plaintext">
+                                {% if user.is_active %}
+                                <span class="badge badge-success">激活</span>
+                                {% else %}
+                                <span class="badge badge-danger">禁用</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">返回用户列表</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

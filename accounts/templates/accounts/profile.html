@@ -1,0 +1,88 @@
+<!-- templates/accounts/profile.html -->
+{% extends "base.html" %}
+{% load app_tags %}
+
+{% block title %}{% page_title "个人资料" %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">个人资料</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_first_name">名字</label>
+                                <input type="text" name="first_name" class="form-control" id="id_first_name" 
+                                       value="{{ form.first_name.value|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_last_name">姓氏</label>
+                                <input type="text" name="last_name" class="form-control" id="id_last_name" 
+                                       value="{{ form.last_name.value|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_email">邮箱</label>
+                                <input type="email" name="email" class="form-control" id="id_email" 
+                                       value="{{ form.email.value|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_phone">手机号</label>
+                                <input type="text" name="phone" class="form-control" id="id_phone" 
+                                       value="{{ form.phone.value|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_department">部门</label>
+                                <select name="department" class="form-control" id="id_department">
+                                    <option value="">请选择部门</option>
+                                    {% for department in form.department.field.queryset %}
+                                    <option value="{{ department.id }}" {% if form.department.value == department.id %}selected{% endif %}>{{ department.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_position">职位</label>
+                                <input type="text" name="position" class="form-control" id="id_position" 
+                                       value="{{ form.position.value|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">更新资料</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

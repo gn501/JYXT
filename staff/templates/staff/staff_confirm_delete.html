@@ -1,0 +1,77 @@
+<!-- staff/templates/staff/staff_confirm_delete.html -->
+{% extends "base.html" %}
+{% load app_tags %}
+{% load static %}
+
+{% block title %}{% page_title "确认删除" %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">确认删除</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'staff:staff_list' %}">员工管理</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'staff:staff_detail' staff.id %}">员工详情</a></li>
+                    <li class="breadcrumb-item active">确认删除</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">确认删除员工</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    您确定要删除员工 <strong>{{ staff.user.first_name }}</strong> 吗？此操作不可撤销。
+                </div>
+                
+                <p>删除后，此员工的所有相关信息将被移除。</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>员工姓名</label>
+                        <p class="form-control-plaintext">{{ staff.user.first_name }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>手机号</label>
+                        <p class="form-control-plaintext">{{ staff.enterprise_phone }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>部门</label>
+                        <p class="form-control-plaintext">{{ staff.department.name|default:"-" }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>职位</label>
+                        <p class="form-control-plaintext">{{ staff.position|default:"-" }}</p>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-danger btn-block">
+                                <i class="fas fa-trash"></i> 确认删除
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'staff:staff_detail' staff.id %}" class="btn btn-secondary btn-block">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

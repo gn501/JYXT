@@ -1,0 +1,64 @@
+<!-- templates/skill_assessment/skill_standard_list.html -->
+{% extends "base.html" %}
+{% load app_tags %}
+
+{% block title %}{% page_title "技能标准管理" %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">技能标准管理</h1>
+            </div>
+            <div class="col-sm-6">
+                <a href="{% url 'skill_assessment:skill_standard_create' %}" class="btn btn-primary float-right">
+                    <i class="fas fa-plus"></i> 添加技能标准
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                {% if skill_standards %}
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>技能名称</th>
+                            <th>技能代码</th>
+                            <th>等级</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for standard in skill_standards %}
+                        <tr>
+                            <td>{{ standard.name }}</td>
+                            <td>{{ standard.code }}</td>
+                            <td>{{ standard.level }}</td>
+                            <td>
+                                <a href="{% url 'skill_assessment:skill_standard_detail' standard.pk %}" class="btn btn-info btn-sm" title="查看">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'skill_assessment:skill_standard_update' standard.pk %}" class="btn btn-warning btn-sm" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-info">
+                    暂无技能标准，<a href="{% url 'skill_assessment:skill_standard_create' %}">点击添加第一个技能标准</a>。
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

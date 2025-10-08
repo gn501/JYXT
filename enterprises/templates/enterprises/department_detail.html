@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static %}
+{% load app_tags %}
+
+{% block title %}{% page_title "部门详情" %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">部门详情</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">首页</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'enterprises:department_list' %}">部门管理</a></li>
+                    <li class="breadcrumb-item active">{{ department.name }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- 操作按钮 -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-sitemap mr-2"></i> {{ department.name }}
+                </div>
+                <div class="card-tools">
+                    <div class="btn-group">
+                        <a href="{% url 'enterprises:department_update' department.id %}" class="btn btn-primary btn-sm mr-2">
+                            <i class="fas fa-edit"></i> 编辑
+                        </a>
+                        <a href="{% url 'enterprises:department_delete' department.id %}" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除该部门吗？');">
+                            <i class="fas fa-trash"></i> 删除
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 部门基本信息 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-info-circle"></i> 部门基本信息</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="text-right font-weight-bold" width="30%">部门名称：</td>
+                                    <td>{{ department.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right font-weight-bold">部门编码：</td>
+                                    <td>{{ department.code|default:'-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right font-weight-bold">所属企业：</td>
+                                    <td>{{ department.enterprise.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right font-weight-bold">上级部门：</td>
+                                    <td>{{ department.parent.name|default:'无' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right font-weight-bold">部门负责人：</td>
+                                    <td>{{ department.manager.username|default:'-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right font-weight-bold">状态：</td>
+                                    <td>
+                                        {% if department.is_active %}
+                                            <span class="badge bg-success">启用</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">禁用</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>部门描述：</label>
+                            <div class="p-2 border rounded">
+                                {{ department.description|default:'暂无描述' }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>创建时间：</label>
+                            <div>{{ department.created_at }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label>更新时间：</label>
+                            <div>{{ department.updated_at }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 部门用户列表 -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-users"></i> 部门用户 ({{ department_users.count }})</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>职位</th>
+                                <th>手机号</th>
+                                <th>邮箱</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if department_users %}
+                                {% for user in department_users %}
+                                <tr>
+                                    <td>{{ user.first_name|default:'-' }}</td>
+                                    <td>{{ user.position|default:'-' }}</td>
+                                    <td>{{ user.enterprise_phone|default:'-' }}</td>
+                                    <td>{{ user.enterprise_email|default:'-' }}</td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">启用</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">禁用</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">暂无用户数据</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 子部门列表 -->
+        {% if sub_departments %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-sitemap"></i> 子部门 ({{ sub_departments.count }})</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>部门名称</th>
+                                <th>部门编码</th>
+                                <th>部门负责人</th>
+                                <th>用户数量</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub_dept in sub_departments %}
+                            <tr>
+                                <td>{{ sub_dept.name }}</td>
+                                <td>{{ sub_dept.code|default:'-' }}</td>
+                                <td>{{ sub_dept.manager.username|default:'-' }}</td>
+                                <td>{{ sub_dept.get_department_users.count }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'enterprises:department_detail' sub_dept.id %}" class="btn btn-info btn-xs" title="查看详情">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

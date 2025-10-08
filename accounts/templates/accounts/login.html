@@ -1,0 +1,336 @@
+{% load static %}
+{% load static %}
+{% load app_tags %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% page_title "登录" %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+    
+    <!-- AdminLTE 3 样式 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte/plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte/css/adminlte.min.css' %}">
+    
+    <style>
+        /* 自定义登录页面样式 */
+        .login-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-box {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+        
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-logo img {
+            max-width: 120px;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .login-logo img:hover {
+            transform: scale(1.05);
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border: none;
+            overflow: hidden;
+        }
+        
+        .login-card-body {
+            padding: 30px;
+        }
+        
+        .login-box-msg {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group:focus-within {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .input-group .form-control {
+            border-right: none;
+            border-radius: 0.5rem 0 0 0.5rem !important;
+            transition: all 0.3s ease;
+            height: 45px;
+            padding: 10px 15px;
+        }
+        
+        .input-group .input-group-text {
+            background-color: #f8f9fa;
+            border-left: none;
+            border-radius: 0 0.5rem 0.5rem 0 !important;
+        }
+        
+        .input-group.has-error .form-control,
+        .input-group.has-error .input-group-text {
+            border-color: #dc3545;
+        }
+        
+        .input-group.has-error .input-group-text {
+            background-color: #f8d7da;
+        }
+        
+        .btn-primary {
+            background-color: #667eea;
+            border-color: #667eea;
+            height: 45px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #5a67d8;
+            border-color: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.7;
+            transform: none;
+        }
+        
+        .btn-primary.loading {
+            position: relative;
+            color: transparent;
+        }
+        
+        .btn-primary.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .icheck-primary {
+            margin-top: 5px;
+        }
+        
+        .alert {
+            border-radius: 0.5rem;
+            margin-bottom: 20px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 576px) {
+            .login-box {
+                padding: 15px;
+            }
+            
+            .login-card-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body class="hold-transition login-page">
+    <div class="login-box">
+        <!-- 登录Logo -->
+        <div class="login-logo">
+            <a href="{% url 'dashboard' %}">
+                <img src="{% static 'img/JYXT-Logo.png' %}" alt="JYXT Logo" class="img-fluid">
+            </a>
+        </div>
+        
+        <!-- 登录表单卡片 -->
+        <div class="card">
+            <div class="card-body login-card-body">
+                <p class="login-box-msg text-center">欢迎登录</p>
+                
+                <!-- 错误消息显示 -->
+                {% if form.errors %}
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-exclamation-triangle"></i> 登录失败</h5>
+                    用户名或密码错误，请重新输入。
+                </div>
+                {% endif %}
+                
+                <!-- 消息系统提示 -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            {{ message|safe }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <!-- 登录表单 -->
+                <form id="loginForm" method="post" action="{% url 'accounts:login' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                    
+                    <!-- 用户名输入 -->
+                    <div class="input-group mb-3 {% if form.errors %}has-error{% endif %}">
+                        <input type="text" name="username" id="username" 
+                               class="form-control {% if form.errors %}is-invalid{% endif %}" 
+                               placeholder="用户名" required autofocus>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-user"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 密码输入 -->
+                    <div class="input-group mb-4 {% if form.errors %}has-error{% endif %}">
+                        <input type="password" name="password" id="password" 
+                               class="form-control {% if form.errors %}is-invalid{% endif %}" 
+                               placeholder="密码" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-lock"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 记住我和登录按钮 -->
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="icheck-primary">
+                                <input type="checkbox" id="remember" name="remember">
+                                <label for="remember">记住我</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <button type="submit" id="loginBtn" class="btn btn-primary btn-block">
+                                <i class="fas fa-sign-in-alt mr-2"></i>登录
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- 忘记密码链接（可选） -->
+                <!--
+                <div class="mt-4">
+                    <p class="mb-1">
+                        <a href="#" class="text-center">忘记密码？</a>
+                    </p>
+                </div>
+                -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{% static 'adminlte/plugins/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'adminlte/js/adminlte.min.js' %}"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // 获取表单和按钮元素
+            const loginForm = $('#loginForm');
+            const loginBtn = $('#loginBtn');
+            const usernameInput = $('#username');
+            const passwordInput = $('#password');
+            
+            // 表单提交处理
+            loginForm.on('submit', function(e) {
+                // 移除之前的错误样式
+                $('.input-group').removeClass('has-error');
+                $('input').removeClass('is-invalid');
+                
+                // 简单的客户端验证
+                let isValid = true;
+                
+                if (!usernameInput.val().trim()) {
+                    usernameInput.closest('.input-group').addClass('has-error');
+                    usernameInput.addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                if (!passwordInput.val()) {
+                    passwordInput.closest('.input-group').addClass('has-error');
+                    passwordInput.addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // 如果验证通过，显示加载状态
+                if (isValid) {
+                    loginBtn.addClass('loading');
+                    loginBtn.prop('disabled', true);
+                } else {
+                    e.preventDefault(); // 阻止表单提交
+                }
+            });
+            
+            // 输入框聚焦时移除错误样式
+            usernameInput.on('focus', function() {
+                $(this).closest('.input-group').removeClass('has-error');
+                $(this).removeClass('is-invalid');
+            });
+            
+            passwordInput.on('focus', function() {
+                $(this).closest('.input-group').removeClass('has-error');
+                $(this).removeClass('is-invalid');
+            });
+            
+            // 自动聚焦到用户名输入框
+            usernameInput.focus();
+            
+            // 添加键盘事件处理
+            passwordInput.on('keypress', function(e) {
+                if (e.which === 13) { // Enter 键
+                    loginForm.submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
