@@ -31,10 +31,10 @@
                     <h5><i class="icon fas fa-ban"></i> 警告！</h5>
                     <p>您确定要删除部门 "<strong>{{ department.name }}</strong>" 吗？此操作无法撤销。</p>
                     
-                    {% if department.children.filter.is_active %} 
+                    {% if has_sub_departments %}
                     <p class="mt-2">该部门下有子部门，删除前请先处理子部门。</p>
-                    {% elif department.get_department_users.count > 0 %}
-                    <p class="mt-2">该部门下有 {{ department.get_department_users.count }} 名用户，删除前请先将这些用户转移到其他部门。</p>
+                    {% elif department_user_count > 0 %}
+                    <p class="mt-2">该部门下有 {{ department_user_count }} 名用户，删除前请先将这些用户转移到其他部门。</p>
                     {% endif %}
                 </div>
                 
@@ -74,15 +74,15 @@
                                         <tbody>
                                             <tr>
                                                 <td class="text-right font-weight-bold">部门负责人：</td>
-                                                <td>{{ department.manager.username|default:'-' }}</td>
+                                                <td>{% if department.manager %}{% with full_name=department.manager.first_name|add:department.manager.last_name %}{{ full_name|default:department.manager.username }}{% endwith %}{% else %}-{% endif %}</td>
                                             </tr>
                                             <tr>
                                                 <td class="text-right font-weight-bold">用户数量：</td>
-                                                <td>{{ department.get_department_users.count }}</td>
+                                                <td>{{ department_user_count }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="text-right font-weight-bold">子部门数量：</td>
-                                                <td>{{ department.children.filter(is_active=True).count }}</td>
+                                                <td>{{ sub_department_count }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -92,7 +92,7 @@
                     </div>
                     
                     <div class="mt-4">
-                        {% if department.children.filter(is_active=True).count == 0 and department.get_department_users.count == 0 %}
+                        {% if sub_department_count == 0 and department_user_count == 0 %}
                         <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i> 确认删除
                         </button>

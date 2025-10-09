@@ -198,9 +198,9 @@ class StaffCreateView(EnterpriseAdminRequiredMixin, CreateView):
         if enterprise:
             # 首先检查用户是否已有staff记录
             try:
-                staff = Staff.objects.get(user=user)
-                # 用户已有staff记录，更新企业和相关信息
-                staff.enterprise = enterprise
+                # 检查该用户是否在当前企业已有staff记录
+                staff = Staff.objects.get(user=user, enterprise=enterprise)
+                # 用户在当前企业已有staff记录，更新信息
                 staff.work_phone = form.cleaned_data.get('work_phone', '')
                 staff.enterprise_phone = enterprise_phone
                 staff.enterprise_email = form.cleaned_data.get('enterprise_email', '')
@@ -209,29 +209,17 @@ class StaffCreateView(EnterpriseAdminRequiredMixin, CreateView):
                 staff.employment_status = form.cleaned_data.get('employment_status', Staff.EMPLOYED)
                 staff.save()
             except Staff.DoesNotExist:
-                # 用户没有staff记录，检查企业中是否已有该手机号的员工
-                try:
-                    staff = Staff.objects.get(enterprise=enterprise, enterprise_phone=enterprise_phone)
-                    # 企业中已有该手机号的员工记录，更新用户关联和信息
-                    staff.user = user
-                    staff.work_phone = form.cleaned_data.get('work_phone', '')
-                    staff.enterprise_email = form.cleaned_data.get('enterprise_email', '')
-                    staff.department = form.cleaned_data.get('department')
-                    staff.position = form.cleaned_data.get('position', '')
-                    staff.employment_status = form.cleaned_data.get('employment_status', Staff.EMPLOYED)
-                    staff.save()
-                except Staff.DoesNotExist:
-                    # 员工记录不存在，创建新记录
-                    staff = Staff.objects.create(
-                        user=user,
-                        enterprise=enterprise,
-                        work_phone=form.cleaned_data.get('work_phone', ''),
-                        enterprise_phone=enterprise_phone,
-                        enterprise_email=form.cleaned_data.get('enterprise_email', ''),
-                        department=form.cleaned_data.get('department'),
-                        position=form.cleaned_data.get('position', ''),
-                        employment_status=form.cleaned_data.get('employment_status', Staff.EMPLOYED)
-                    )
+                # 用户在当前企业没有staff记录，创建新记录
+                staff = Staff.objects.create(
+                    user=user,
+                    enterprise=enterprise,
+                    work_phone=form.cleaned_data.get('work_phone', ''),
+                    enterprise_phone=enterprise_phone,
+                    enterprise_email=form.cleaned_data.get('enterprise_email', ''),
+                    department=form.cleaned_data.get('department'),
+                    position=form.cleaned_data.get('position', ''),
+                    employment_status=form.cleaned_data.get('employment_status', Staff.EMPLOYED)
+                )
         
         # 确保员工角色记录存在
         if staff:

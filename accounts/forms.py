@@ -76,6 +76,7 @@ class UserCreateForm(forms.Form):
 class UserUpdateForm(forms.Form):
     """用户更新复合表单 - 同时处理User和Staff模型的数据"""
     # User模型字段
+    username = forms.CharField(max_length=150, required=True, label='用户名', disabled=True)
     email = forms.EmailField(required=False, label='邮箱')
     user_type = forms.ChoiceField(choices=User.USER_TYPE_CHOICES, label='用户类型')
     is_active = forms.BooleanField(required=False, label='激活')
@@ -84,19 +85,22 @@ class UserUpdateForm(forms.Form):
     first_name = forms.CharField(max_length=30, required=False, label='姓名')
     last_name = forms.CharField(max_length=30, required=False, label='昵称')
     enterprise_phone = forms.CharField(max_length=20, required=False, label='手机号')
-    department = forms.ModelChoiceField(
-        queryset=Department.objects.filter(is_active=True).order_by('name'),
-        required=False, 
-        label='部门',
-        empty_label='请选择部门'
-    )
-    position = forms.CharField(max_length=100, required=False, label='职位')
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
+        # 获取要更新的用户ID
+        self.user_id = kwargs.pop('user_id', None)
         # 移除instance参数，因为普通Form类不处理这个参数
         kwargs.pop('instance', None)  # 安全地移除instance参数
         super().__init__(*args, **kwargs)
+        
+        # 如果有用户ID，尝试获取并设置用户名
+        if self.user_id:
+            try:
+                user = User.objects.get(id=self.user_id)
+                self.initial['username'] = user.username
+            except User.DoesNotExist:
+                pass
         
         # 根据用户权限限制字段选项
         if self.request and not getattr(self.request.user, 'is_super_admin', False):
@@ -106,12 +110,7 @@ class UserUpdateForm(forms.Form):
                 if choice[0] != getattr(User, 'SUPER_ADMIN', None)  # 兼容不存在的SUPER_ADMIN
             ]
             
-            # 根据当前用户的企业过滤部门选项
-            if hasattr(self.request.user, 'enterprise') and self.request.user.enterprise:
-                self.fields['department'].queryset = Department.objects.filter(
-                    enterprise=self.request.user.enterprise, 
-                    is_active=True
-                ).order_by('name')
+
 
 class ProfileForm(forms.Form):
     """个人资料表单 - 处理个人信息的更新"""

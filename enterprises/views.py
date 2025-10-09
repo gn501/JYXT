@@ -5,9 +5,19 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.core.exceptions import PermissionDenied
+from django.forms import ModelChoiceField
 from JYXT.core.permissions import SuperUserRequiredMixin, EnterpriseRequiredMixin, EnterpriseAdminRequiredMixin
 from .models import Enterprise, EnterpriseSubscription, Department
 from accounts.models import User
+
+# 自定义的ModelChoiceField，用于在表单中显示用户的姓名作为标签
+class UserNameChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj):
+        # 使用用户的姓名作为标签，如果没有姓名则使用用户名
+        full_name = f"{obj.first_name}{obj.last_name}"
+        if full_name:
+            return full_name
+        return obj.username
 
 class EnterpriseBaseView(LoginRequiredMixin):
     """基础视图类"""
@@ -34,7 +44,7 @@ class EnterpriseListView(SuperUserRequiredMixin, ListView):
         # 为每个企业添加管理员信息
         for enterprise in context['enterprises']:
             # 获取企业管理员用户 - 通过Staff模型关联
-            admin = User.objects.filter(staff__enterprise=enterprise, user_type='enterprise_admin').first()
+            admin = User.objects.filter(staff_members__enterprise=enterprise, user_type='enterprise_admin').first()
             # 将管理员信息添加到企业对象上，方便在模板中使用
             enterprise.admin_username = admin.username if admin else '-'  
         return context
@@ -367,9 +377,13 @@ class DepartmentCreateView(EnterpriseAdminRequiredMixin, BaseDepartmentView, Cre
             ).exclude(id=self.kwargs.get('pk'))  # 防止自引用（更新时）
             
             # 限制负责人只能是当前企业的用户
-            form.fields['manager'].queryset = User.objects.filter(
-                staff__enterprise=user.staff.enterprise,
-                is_active=True
+            form.fields['manager'] = UserNameChoiceField(
+                queryset=User.objects.filter(
+                    staff_members__enterprise=user.staff.enterprise,
+                    is_active=True
+                ),
+                required=False,
+                label='部门负责人'
             )
         else:
             # 如果用户没有关联的企业，设置空查询集
@@ -429,9 +443,13 @@ class DepartmentUpdateView(EnterpriseAdminRequiredMixin, BaseDepartmentView, Upd
             ).exclude(id__in=excluded_ids)
             
             # 限制负责人只能是当前企业的用户
-            form.fields['manager'].queryset = User.objects.filter(
-                staff__enterprise=user.staff.enterprise,
-                is_active=True
+            form.fields['manager'] = UserNameChoiceField(
+                queryset=User.objects.filter(
+                    staff_members__enterprise=user.staff.enterprise,
+                    is_active=True
+                ),
+                required=False,
+                label='部门负责人'
             )
         else:
             # 如果用户没有关联的企业，设置空查询集
@@ -483,6 +501,22 @@ class DepartmentDeleteView(EnterpriseAdminRequiredMixin, BaseDepartmentView, Del
     """删除部门视图"""
     template_name = 'enterprises/department_confirm_delete.html'
     success_url = reverse_lazy('enterprises:department_list')
+    
+    def get_context_data(self, **kwargs):
+        """添加额外的上下文数据"""
+        context = super().get_context_data(**kwargs)
+        department = self.get_object()
+        
+        # 计算子部门数量
+        context['sub_department_count'] = department.children.filter(is_active=True).count()
+        
+        # 计算部门用户数量
+        context['department_user_count'] = department.get_department_users().count()
+        
+        # 检查是否有子部门
+        context['has_sub_departments'] = department.children.filter(is_active=True).exists()
+        
+        return context
     
     def delete(self, request, *args, **kwargs):
         """处理删除操作"""

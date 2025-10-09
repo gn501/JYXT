@@ -1,0 +1,253 @@
+{% load static %}
+{% load app_tags %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% page_title "选择企业" %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+    
+    <!-- AdminLTE 3 样式 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte/plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'adminlte/css/adminlte.min.css' %}">
+    
+    <style>
+        /* 自定义页面样式 */
+        .select-enterprise-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .select-enterprise-box {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border: none;
+            overflow: hidden;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .enterprise-option {
+            margin-bottom: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background-color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .enterprise-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .enterprise-option.selected {
+            border-color: #667eea;
+            background-color: #f8f9ff;
+        }
+        
+        .enterprise-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        
+        .enterprise-option-content {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .enterprise-icon {
+            background-color: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .enterprise-info {
+            flex: 1;
+        }
+        
+        .enterprise-name {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .enterprise-position {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .btn-primary {
+            background-color: #667eea;
+            border-color: #667eea;
+            height: 45px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #5a67d8;
+            border-color: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .alert {
+            border-radius: 0.5rem;
+            margin-bottom: 20px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 576px) {
+            .select-enterprise-box {
+                padding: 15px;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="hold-transition select-enterprise-page">
+    <div class="select-enterprise-box">
+        <!-- 选择企业卡片 -->
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">
+                    <i class="fas fa-building mr-2"></i>选择登录企业
+                </h3>
+                
+                <!-- 错误消息显示 -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            {{ message|safe }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <!-- 企业选择表单 -->
+                <form id="selectEnterpriseForm" method="post" action="{% url 'accounts:select_enterprise' %}">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <p class="mb-4">您在以下企业有任职记录，请选择要登录的企业：</p>
+                        
+                        {% for staff in staffs %}
+                        <div class="enterprise-option" onclick="selectEnterprise('{{ staff.enterprise.id }}')">
+                            <input type="radio" id="enterprise_{{ staff.enterprise.id }}" name="enterprise_id" value="{{ staff.enterprise.id }}">
+                            <label for="enterprise_{{ staff.enterprise.id }}" class="enterprise-option-content">
+                                <div class="enterprise-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="enterprise-info">
+                                    <div class="enterprise-name">{{ staff.enterprise.name }}</div>
+                                    <div class="enterprise-position">
+                                        {% if staff.department %}部门：{{ staff.department.name }} | {% endif %}
+                                        职位：{{ staff.position|default:'普通员工' }}
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="submit" id="submitBtn" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt mr-2"></i>确认登录
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{% static 'adminlte/plugins/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'adminlte/js/adminlte.min.js' %}"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // 默认选择第一个企业
+            const firstOption = $('.enterprise-option').first();
+            if (firstOption.length) {
+                selectEnterprise(firstOption.find('input').val());
+            }
+        });
+        
+        // 选择企业的函数
+        function selectEnterprise(enterpriseId) {
+            // 移除所有选中状态
+            $('.enterprise-option').removeClass('selected');
+            
+            // 设置当前选中状态
+            const selectedOption = $(`#enterprise_${enterpriseId}`).closest('.enterprise-option');
+            selectedOption.addClass('selected');
+            
+            // 选中对应的单选按钮
+            $(`#enterprise_${enterpriseId}`).prop('checked', true);
+        }
+        
+        // 表单提交处理
+        $('#selectEnterpriseForm').on('submit', function(e) {
+            // 检查是否有选中的企业
+            if (!$('input[name="enterprise_id"]:checked').val()) {
+                e.preventDefault();
+                alert('请选择一个企业');
+                return false;
+            }
+            
+            // 显示加载状态
+            $('#submitBtn').addClass('loading');
+            $('#submitBtn').prop('disabled', true);
+        });
+    </script>
+</body>
+</html>

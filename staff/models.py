@@ -14,11 +14,11 @@ class Staff(models.Model):
         (RESIGNED, '离职'),
     ]
     
-    # 与用户模型的一对一关联
-    user = models.OneToOneField(
+    # 与用户模型的一对多关联（一个用户可以在多个企业任职）
+    user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='staff',
+        related_name='staff_members',
         verbose_name='关联用户'
     )
     
@@ -121,16 +121,13 @@ from accounts.models import User
 @receiver(post_save, sender=User)
 def create_staff_profile(sender, instance, created, **kwargs):
     """在用户创建时自动创建员工资料"""
-    if created:
-        # 创建员工
-        staff = Staff.objects.create(user=instance)
+    # 注：由于一个用户可以在多个企业任职，我们不再自动为所有用户创建staff记录
+    # 只有在特定场景下（如通过企业管理界面创建用户）才会创建staff记录
+    pass
 
 @receiver(post_save, sender=User)
 def update_staff_profile(sender, instance, **kwargs):
     """在用户更新时同步更新员工资料"""
-    # 确保员工存在
-    staff, created = Staff.objects.get_or_create(user=instance)
-    
-    # 如果有其他需要同步的字段，在这里添加
-    
-    staff.save()
+    # 注：由于一个用户可以在多个企业任职，我们不再自动更新所有staff记录
+    # 只有在特定场景下才会更新staff记录
+    pass

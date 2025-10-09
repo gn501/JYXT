@@ -64,7 +64,7 @@
                                         {{ department.name }}
                                     </td>
                                     <td>{{ department.code|default:'-' }}</td>
-                                    <td>{{ department.manager.username|default:'-' }}</td>
+                                    <td>{% if department.manager %}{% with full_name=department.manager.first_name|add:department.manager.last_name %}{{ full_name|default:department.manager.username }}{% endwith %}{% else %}-{% endif %}</td>
                                     <td>{{ department.enterprise.name }}</td>
                                     <td>{{ department.get_department_users.count }}</td>
                                     <td>

@@ -1,10 +1,10 @@
 # accounts/views.py
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DetailView, View
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from JYXT.core.permissions import SuperUserRequiredMixin, EnterpriseAdminRequiredMixin
 from .models import User
 from staff.models import Staff, StaffRole
@@ -17,7 +17,36 @@ class CustomLoginView(LoginView):
     """自定义登录视图"""
     template_name = 'accounts/login.html'
     
+    def form_valid(self, form):
+        """处理登录表单验证成功后的逻辑"""
+        # 获取当前登录的用户（在父类form_valid前，我们需要先认证用户）
+        user = form.get_user()
+        
+        # 清除之前可能存在的企业选择session - 关键修复点
+        if 'current_enterprise_id' in self.request.session:
+            del self.request.session['current_enterprise_id']
+        
+        # 检查用户是否有在职的企业任职记录
+        employed_staffs = user.staff_members.filter(employment_status=Staff.EMPLOYED)
+        
+        # 根据用户情况设置success_url
+        if getattr(user, 'is_super_admin', False):
+            self.success_url = reverse_lazy('enterprises:enterprise_list')
+        elif employed_staffs.count() == 0:
+            self.success_url = reverse_lazy('dashboard')
+        elif employed_staffs.count() == 1:
+            self.success_url = reverse_lazy('dashboard')
+        else:
+            self.success_url = reverse_lazy('accounts:select_enterprise')
+        
+        # 现在执行父类的form_valid方法，它会使用我们已经设置好的success_url
+        return super().form_valid(form)
+    
     def get_success_url(self):
+        # 优先使用form_valid中设置的success_url
+        if hasattr(self, 'success_url'):
+            return self.success_url
+        # 否则使用默认逻辑
         user = self.request.user
         if getattr(user, 'is_super_admin', False):
             return reverse_lazy('enterprises:enterprise_list')
@@ -32,6 +61,49 @@ class CustomLogoutView(LogoutView):
         messages.info(request, "您已成功退出系统")
         return super().dispatch(request, *args, **kwargs)
 
+class SelectEnterpriseView(LoginRequiredMixin, View):
+    """企业选择视图"""
+    template_name = 'accounts/select_enterprise.html'
+    
+    def get(self, request, *args, **kwargs):
+        # 清除之前可能存在的企业选择session - 关键修复点
+        if 'current_enterprise_id' in request.session:
+            del request.session['current_enterprise_id']
+        
+        # 获取用户所有在职的企业任职记录
+        employed_staffs = request.user.staff_members.filter(employment_status=Staff.EMPLOYED)
+        
+        # 如果用户只有一个在职企业，直接跳转到首页
+        if employed_staffs.count() <= 1:
+            return redirect('dashboard')
+        
+        return render(request, self.template_name, {
+            'staffs': employed_staffs
+        })    
+    def post(self, request, *args, **kwargs):
+        # 获取用户选择的企业ID
+        enterprise_id = request.POST.get('enterprise_id')
+        
+        if not enterprise_id:
+            messages.error(request, "请选择一个企业")
+            return redirect('accounts:select_enterprise')
+        
+        try:
+            # 验证用户是否在该企业有在职记录
+            staff = request.user.staff_members.get(
+                enterprise_id=enterprise_id,
+                employment_status=Staff.EMPLOYED
+            )
+            
+            # 可以在这里添加逻辑来设置用户当前选择的企业
+            # 例如，使用session来存储用户当前选择的企业ID
+            request.session['current_enterprise_id'] = enterprise_id
+            
+            return redirect('dashboard')
+        except Staff.DoesNotExist:
+            messages.error(request, "您没有选择企业的访问权限")
+            return redirect('accounts:select_enterprise')
+
 class UserListView(EnterpriseAdminRequiredMixin, ListView):
     """用户列表"""
     model = User
@@ -44,7 +116,7 @@ class UserListView(EnterpriseAdminRequiredMixin, ListView):
         # 系统管理员（Django的is_superuser）和超级管理员可以看到所有用户
         if not (self.request.user.is_superuser or getattr(self.request.user, 'is_super_admin', False)):
             if hasattr(self.request.user, 'staff') and self.request.user.staff and self.request.user.staff.enterprise:
-                queryset = queryset.filter(staff__enterprise=self.request.user.staff.enterprise)
+                queryset = queryset.filter(staff_members__enterprise=self.request.user.staff.enterprise)
         return queryset
     
     def get_context_data(self, **kwargs):
@@ -70,6 +142,7 @@ class UserCreateView(EnterpriseAdminRequiredMixin, CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['request'] = self.request
+        kwargs['user_id'] = self.kwargs.get('pk')  # 传递用户ID给表单
         return kwargs
     
     def get_context_data(self, **kwargs):
@@ -129,13 +202,13 @@ class UserCreateView(EnterpriseAdminRequiredMixin, CreateView):
             
             user.save()
         
-        # 检查该企业中是否已存在该手机号的员工记录
+        # 检查该用户是否在当前企业已有staff记录
         staff = None
         if enterprise:
             try:
-                staff = Staff.objects.get(enterprise=enterprise, enterprise_phone=enterprise_phone)
-                # 员工记录已存在，更新信息
-                staff.user = user  # 确保用户关联正确
+                # 检查用户是否在当前企业已有staff记录
+                staff = Staff.objects.get(user=user, enterprise=enterprise)
+                # 用户在当前企业已有staff记录，更新信息
                 staff.first_name = form.cleaned_data['first_name']
                 staff.last_name = form.cleaned_data.get('last_name', '')
                 staff.work_phone = form.cleaned_data.get('work_phone', '')
@@ -144,7 +217,7 @@ class UserCreateView(EnterpriseAdminRequiredMixin, CreateView):
                 staff.position = form.cleaned_data.get('position', '')
                 staff.save()
             except Staff.DoesNotExist:
-                # 员工记录不存在，创建新记录
+                # 用户在当前企业没有staff记录，创建新记录
                 staff = Staff.objects.create(
                     user=user,
                     enterprise=enterprise,
@@ -188,6 +261,7 @@ class UserUpdateView(EnterpriseAdminRequiredMixin, UpdateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['request'] = self.request
+        kwargs['user_id'] = self.kwargs.get('pk')  # 传递用户ID给表单
         return kwargs
     
     def get_initial(self):
@@ -197,6 +271,7 @@ class UserUpdateView(EnterpriseAdminRequiredMixin, UpdateView):
         
         # 设置表单初始值
         initial = {
+            'username': user.username,  # 直接设置用户名初始值
             'email': user.email,
             'user_type': user.user_type,
             'is_active': user.is_active,
@@ -208,8 +283,6 @@ class UserUpdateView(EnterpriseAdminRequiredMixin, UpdateView):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'enterprise_phone': staff.enterprise_phone,
-                'department': staff.department,  # 现在这个字段是一个Department对象
-                'position': staff.position,
             })
         
         return initial
@@ -233,7 +306,7 @@ class UserUpdateView(EnterpriseAdminRequiredMixin, UpdateView):
                 queryset = queryset.filter(user_type='enterprise_admin')
             elif hasattr(user, 'staff') and user.staff and user.staff.enterprise:
                 # 普通企业用户只能查看自己企业的用户
-                queryset = queryset.filter(staff__enterprise=user.staff.enterprise)
+                queryset = queryset.filter(staff_members__enterprise=user.staff.enterprise)
             else:
                 # 没有企业关联的用户只能查看自己
                 queryset = queryset.filter(id=user.id)
@@ -272,19 +345,21 @@ class UserUpdateView(EnterpriseAdminRequiredMixin, UpdateView):
         user.last_name = form.cleaned_data['last_name']
         user.save()
         
-        # 获取或创建员工资料对象
-        staff, created = Staff.objects.get_or_create(user=user)
+        # 获取当前用户所在的企业
+        current_enterprise = None
+        if hasattr(self.request.user, 'staff') and self.request.user.staff and self.request.user.staff.enterprise:
+            current_enterprise = self.request.user.staff.enterprise
         
-        # 更新员工资料信息
-        staff.enterprise_phone = form.cleaned_data['enterprise_phone']
-        staff.department = form.cleaned_data['department']  # 现在这个字段是一个Department对象
-        staff.position = form.cleaned_data['position']
-        
-        # 确保企业关联正确
-        if hasattr(user, 'staff') and user.staff and user.staff.enterprise:
-            staff.enterprise = user.staff.enterprise
-        
-        staff.save()
+        # 获取或创建当前企业的员工资料对象
+        if current_enterprise:
+            staff, created = Staff.objects.get_or_create(user=user, enterprise=current_enterprise)
+            
+            # 更新员工资料信息
+            staff.enterprise_phone = form.cleaned_data['enterprise_phone']
+            staff.department = form.cleaned_data['department']  # 现在这个字段是一个Department对象
+            staff.position = form.cleaned_data['position']
+            
+            staff.save()
         
         # 更新员工角色信息
         role, created = StaffRole.objects.get_or_create(staff=staff)
@@ -360,19 +435,21 @@ class ProfileView(BaseView, UpdateView):
         user.last_name = form.cleaned_data['last_name']
         user.save()
         
-        # 获取或创建员工资料对象
-        staff, created = Staff.objects.get_or_create(user=user)
-        
-        # 更新员工资料信息
-        staff.enterprise_phone = form.cleaned_data['enterprise_phone']
-        staff.department = form.cleaned_data['department']  # 现在这个字段是一个Department对象
-        staff.position = form.cleaned_data['position']
-        
-        # 确保企业关联正确
+        # 获取当前用户所在的企业
+        current_enterprise = None
         if hasattr(user, 'staff') and user.staff and user.staff.enterprise:
-            staff.enterprise = user.staff.enterprise
+            current_enterprise = user.staff.enterprise
         
-        staff.save()
+        # 获取或创建当前企业的员工资料对象
+        if current_enterprise:
+            staff, created = Staff.objects.get_or_create(user=user, enterprise=current_enterprise)
+            
+            # 更新员工资料信息
+            staff.enterprise_phone = form.cleaned_data['enterprise_phone']
+            staff.department = form.cleaned_data['department']  # 现在这个字段是一个Department对象
+            staff.position = form.cleaned_data['position']
+            
+            staff.save()
         
         messages.success(self.request, "个人资料更新成功")
         return redirect(self.success_url)
@@ -411,7 +488,7 @@ class UserDetailView(EnterpriseAdminRequiredMixin, DetailView):
                 queryset = queryset.filter(user_type='enterprise_admin')
             elif hasattr(user, 'staff') and user.staff and user.staff.enterprise:
                 # 普通企业用户只能查看自己企业的用户
-                queryset = queryset.filter(staff__enterprise=user.staff.enterprise)
+                queryset = queryset.filter(staff_members__enterprise=user.staff.enterprise)
             else:
                 # 没有企业关联的用户只能查看自己
                 queryset = queryset.filter(id=user.id)

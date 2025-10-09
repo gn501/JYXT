@@ -50,7 +50,23 @@
                         <tr>
                             <td>{{ user.username }}</td>
                             <td>{{ user.first_name }}{{ user.last_name }}</td>
-                            <td>{% if user.staff and user.staff.enterprise %}{{ user.staff.enterprise.name }}{% else %}-{% endif %}</td>
+                            <td>
+                                {% with user.staff_members.all as staff_records %}
+                                    {% if staff_records %}
+                                        {% for staff in staff_records %}
+                                            {% if staff.enterprise %}
+                                                {% if staff.employment_status == 'employed' %}
+                                                    {{ staff.enterprise.name }}{% if not forloop.last %}<br>{% endif %}
+                                                {% else %}
+                                                    <span style="color: red; text-decoration: line-through;">{{ staff.enterprise.name }}</span>{% if not forloop.last %}<br>{% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
                             <td>{{ user.get_user_type_display }}</td>
                             <td>
                                 {% if user.is_active %}

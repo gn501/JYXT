@@ -95,7 +95,15 @@ class User(AbstractUser):
     def staff_profile(self):
         """获取用户的员工资料（向后兼容的方法）"""
         try:
-            return self.staff
+            return self.staff_members.first()
+        except ObjectDoesNotExist:
+            return None
+    
+    @property
+    def staff(self):
+        """获取用户的第一个员工资料记录（向后兼容的属性）"""
+        try:
+            return self.staff_members.first()
         except ObjectDoesNotExist:
             return None
     

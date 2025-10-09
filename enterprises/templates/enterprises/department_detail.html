@@ -71,7 +71,7 @@
                                 </tr>
                                 <tr>
                                     <td class="text-right font-weight-bold">部门负责人：</td>
-                                    <td>{{ department.manager.username|default:'-' }}</td>
+                                <td>{% if department.manager %}{% with full_name=department.manager.first_name|add:department.manager.last_name %}{{ full_name|default:department.manager.username }}{% endwith %}{% else %}-{% endif %}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-right font-weight-bold">状态：</td>
